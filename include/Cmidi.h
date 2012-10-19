@@ -129,6 +129,7 @@ void Generator::setWindow()
 	wrefresh(win);
     
 	mvwprintw(win,0,start_x - (t.length()/2), t.c_str());
+	mvwprintw(win,0,width - 9, "%i:BPM" , BPM);
 	wrefresh(win);
 	
 }
@@ -271,7 +272,7 @@ void Generator::getMouse()
 void Generator::getkeys()
 {/**/}
 
-int checkColor(char *s)
+int convertToInt(char *s)
 {
     
 	return atoi(s);
