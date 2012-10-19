@@ -15,21 +15,21 @@ using std::string;
 
 const int scale = 12;
 
-const string NOTES[scale + 2] = 
-			{"  ",
-			 "B",
-	 		 "A#",
-	 		 "A",
-	 		 "G#",
-	 		 "G",
-	 		 "F#",
-	 		 "F",
-	 		 "E",
-	 		 "D#",
-	 		 "D",
-	 		 "C#",
-	 		 "C"
-			};
+const string NOTES[scale + 2] =
+{"  ",
+    "B",
+    "A#",
+    "A",
+    "G#",
+    "G",
+    "F#",
+    "F",
+    "E",
+    "D#",
+    "D",
+    "C#",
+    "C"
+};
 
 /*Change this to suit your needs*/
 int L = 24; //TERMINAL LINES
@@ -42,37 +42,48 @@ const int start_x =  (C - width) / 2;
 
 class Generator
 {
-	WINDOW *win;	
+	WINDOW *win;
 	int dc;
 	int c, cord_y, cord_x;
-	string t;	
+	string t;
 	MEVENT event; //For mouse events
-	vector<vector<char> > Grid;
-	
-	public:
+	vector<vector<char> > Grid; //for visual grid of '.' points
+	vector<vector<bool> > N; //for note, to save the position of notes
+    
+public:
 	Generator();
 	~Generator();
+	
+	/*Graphic stuff*/
 	void set_graphics();
 	void set_defaultColor(int clr) {dc = clr;}
 	int get_defaultColor() {return dc;}
+	
+	/*Window stuff*/
 	void setTitle(string title) {t = title;}
 	void setWindow();
 	void drawGrid();
+	
+	/*Processes*/
 	string checkForNote(int position);
 	void generate_shit();
-	void getMouse(/*mousevent &someting???*/);	
-
+	
+	/*Input*/
+	void getMouse(/*mousevent &someting???*/);
+	void getkeys();
 };
 
 Generator::Generator()
-	: t(""), dc(0), c(0), cord_y(0),cord_x(0), win(NULL) , Grid(height,vector<char>(width))
+: t(""), dc(0), c(0), cord_y(0),cord_x(0), win(NULL) ,
+Grid(height,vector<char>(width)),
+N(height,vector<bool>(width))
 {
-
+    
 	initscr();
 	noecho();
 	curs_set(0);
 	keypad(win,TRUE);
-
+    
 	mousemask(ALL_MOUSE_EVENTS,NULL);
 	
 	start_color();
@@ -83,8 +94,8 @@ Generator::Generator()
 	init_pair(5,COLOR_MAGENTA,COLOR_BLACK);
 	init_pair(6,COLOR_CYAN,COLOR_BLACK);
 	init_pair(7,COLOR_WHITE,COLOR_BLACK);
-	init_pair(8,COLOR_BLACK,COLOR_BLACK);	
-
+	init_pair(8,COLOR_BLACK,COLOR_BLACK);
+    
 }
 
 Generator::~Generator()
@@ -94,44 +105,46 @@ Generator::~Generator()
 	endwin();
 }
 
-void Generator::setWindow()
-{
-
-	win = newwin(height,width,start_y, start_x);
-	box(win,0,1);
-	wrefresh(win);
-
-	mvwprintw(win,0,start_x - (t.length()/2), t.c_str());
-	wrefresh(win);
-	
-}
-
 void Generator::set_graphics()
 {
-
-
+    
+    
 	for(int i = 0; i < height; i++)
 	{
 		for(int j = 0; j < width; j++)
 		{
 			Grid[i][j] = '.';
 		}
-
+        
 	}
-
-
+    
+    
 }
+
+void Generator::setWindow()
+{
+    
+	win = newwin(height,width,start_y, start_x);
+	box(win,0,1);
+	wrefresh(win);
+    
+	mvwprintw(win,0,start_x - (t.length()/2), t.c_str());
+	wrefresh(win);
+	
+}
+
+
 
 void Generator::drawGrid()
 {
-
-
+    
+    
 	static int x_counter = 0;
 	static int y_counter = 0;
 	
 	int sy = 1;
 	int sx = 1;
-
+    
 	for(int i = 0; i < height-2; i++)
 	{
 		for(int j = 0; j < width-2; j++)
@@ -139,33 +152,25 @@ void Generator::drawGrid()
 			wattron(win,COLOR_PAIR(dc));
 			mvwaddch(win,sy,sx,Grid[i][j]);
 			wattroff(win,COLOR_PAIR(dc));
-			wrefresh(win);			
-
+			wrefresh(win);
+            
 			x_counter++;
 			if(x_counter >= width - 2)
 			{sx = 0;
-			 x_counter = 0;}
-
+                x_counter = 0;}
+            
 			sx++;
 		}
-
+        
 		y_counter++;
 		if(y_counter >= height - 2)
 		{
 			sy = 0;
 		}
-
+        
 		sy++;
 	}
-
-}
-
-void Generator::generate_shit()
-{
-	setWindow();
-	drawGrid();
-
-
+    
 }
 
 string Generator::checkForNote(int position)
@@ -174,14 +179,23 @@ string Generator::checkForNote(int position)
 		return NOTES[position];
 }
 
+void Generator::generate_shit()
+{
+	setWindow();
+	drawGrid();
+    
+    
+}
+
+
 void Generator::getMouse()
 {
 	keypad(win,1);
-
+    
 	c = wgetch(win);
-		switch(c)
-		{
-			case KEY_MOUSE: 
+    switch(c)
+    {
+        case KEY_MOUSE:
 			getmouse(&event);
 			cord_y = event.y;
 			cord_x = event.x;
@@ -196,17 +210,20 @@ void Generator::getMouse()
 			}
 			wrefresh(win);
 			break;
-		}
+    }
 	wrefresh(win);
 	wgetch(win);
-
+    
 }
+
+void Generator::getkeys()
+{/**/}
 
 int checkColor(char *s)
 {
-
+    
 	return atoi(s);
-
+    
 }
 
 #endif
