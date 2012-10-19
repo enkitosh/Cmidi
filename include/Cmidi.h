@@ -56,7 +56,7 @@ class Generator
 	void set_defaultColor(int clr) {dc = clr;}
 	int get_defaultColor() {return dc;}
 	void setTitle(string title) {t = title;}
-	void gammagamme();
+	void setWindow();
 	void drawGrid();
 	string checkForNote(int position);
 	void generate_shit();
@@ -94,7 +94,7 @@ Generator::~Generator()
 	endwin();
 }
 
-void Generator::gammagamme()
+void Generator::setWindow()
 {
 
 	win = newwin(height,width,start_y, start_x);
@@ -162,7 +162,7 @@ void Generator::drawGrid()
 
 void Generator::generate_shit()
 {
-	gammagamme();
+	setWindow();
 	drawGrid();
 
 
