@@ -19,16 +19,15 @@ otherwise I think there is nothing more (hopefully). I think the ncurses header 
      int main(int argc, char *argv[])
      {
 
-//The first two parameters take input when you load the excecutable , the first is channel number
+The first two parameters take input when you load the excecutable , the first is channel number
       
       //so like ./test channel1 Drums
 
       string str = argv[1]; //Channel1
       string ttl = argv[2]; //Drums
 
-    //***COLOR CHECKING***//
 
-//For now you have to either put a number only or a string with a number in the end like here ^^ for the first argument
+For now you have to either put a number only or a string with a number in the end like here ^^ for the first argument
       
 
 
