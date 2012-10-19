@@ -3,6 +3,8 @@ Cmidi
 
 midi sequencer for command line
 
+**NOTE this code is at very early stage, there are no "midi" implementations in this yet, this is mostly graphics and event input from mouse.
+
 These are very basic notes about the test.cpp file in the /include folder.
 
     #include "CMidi.h"
