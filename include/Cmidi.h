@@ -7,6 +7,7 @@
 #include <ctime>
 #include <curses.h>
 #include <sstream>
+#include <unistd.h>
 
 using std::cout;
 using std::endl;
@@ -31,6 +32,19 @@ const string NOTES[scale + 2] =
     "C"
 };
 
+/*Timing and BPM*/
+const int BPM = 120; //Beats per minute
+const int BPS = BPM / 60; //Beats per second
+const int TIME = 1000 / BPS; //calculate time - this is x milliseconds per beat
+const int DELAY = TIME / BPM; //calculate Delay time
+
+int convertToMilliseconds(int t)
+{
+	return t * 1000;
+}
+
+const int milliTime = convertToMilliseconds(TIME);
+
 /*Change this to suit your needs*/
 int L = 24; //TERMINAL LINES
 int C = 80; //TERMINAL COLUMNS
@@ -47,7 +61,6 @@ class Generator
 	int c, cord_y, cord_x;
 	string t;
 	MEVENT event; //For mouse events
-	vector<vector<char> > Grid; //for visual grid of '.' points
 	vector<vector<bool> > N; //for note, to save the position of notes
     
 public:
@@ -55,7 +68,6 @@ public:
 	~Generator();
 	
 	/*Graphic stuff*/
-	void set_graphics();
 	void set_defaultColor(int clr) {dc = clr;}
 	int get_defaultColor() {return dc;}
 	
@@ -67,7 +79,8 @@ public:
 	/*Processes*/
 	string checkForNote(int position);
 	void generate_shit();
-	
+	void play_sequence();	
+
 	/*Input*/
 	void getMouse(/*mousevent &someting???*/);
 	void getkeys();
@@ -75,7 +88,6 @@ public:
 
 Generator::Generator()
 : t(""), dc(0), c(0), cord_y(0),cord_x(0), win(NULL) ,
-Grid(height,vector<char>(width)),
 N(height,vector<bool>(width))
 {
     
@@ -105,21 +117,9 @@ Generator::~Generator()
 	endwin();
 }
 
-void Generator::set_graphics()
-{
     
     
-	for(int i = 0; i < height; i++)
-	{
-		for(int j = 0; j < width; j++)
-		{
-			Grid[i][j] = '.';
-		}
-        
-	}
     
-    
-}
 
 void Generator::setWindow()
 {
@@ -139,36 +139,18 @@ void Generator::drawGrid()
 {
     
     
-	static int x_counter = 0;
-	static int y_counter = 0;
 	
-	int sy = 1;
-	int sx = 1;
     
-	for(int i = 0; i < height-2; i++)
+	for(int i = 1; i < height-1; i++)
 	{
-		for(int j = 0; j < width-2; j++)
+		for(int j = 1; j < width-1; j++)
 		{
 			wattron(win,COLOR_PAIR(dc));
-			mvwaddch(win,sy,sx,Grid[i][j]);
+			mvwaddch(win,i,j,'.');
 			wattroff(win,COLOR_PAIR(dc));
-			wrefresh(win);
+			wrefresh(win); 
             
-			x_counter++;
-			if(x_counter >= width - 2)
-			{sx = 0;
-                x_counter = 0;}
-            
-			sx++;
 		}
-        
-		y_counter++;
-		if(y_counter >= height - 2)
-		{
-			sy = 0;
-		}
-        
-		sy++;
 	}
     
 }
@@ -188,6 +170,72 @@ void Generator::generate_shit()
 }
 
 
+void Generator::play_sequence()
+{
+	static int cells = 1;
+
+	while(cells < width-1)
+	{
+
+
+		for(int i = 1; i < height-1; i++)	
+		{
+		/*Draw a sequence line for each bar*/	
+			wattron(win,COLOR_PAIR(7));
+			mvwaddch(win,i,cells,'|');
+			wattroff(win,COLOR_PAIR(7));
+			wrefresh(win);
+	
+		/*We have to clean up the bar before so it doesn't
+		  leave behind a white line*/
+			if(cells-1 != 0)
+			{
+				wattron(win, COLOR_PAIR(dc));
+				mvwaddch(win,i,cells-1,'.');
+				wattroff(win, COLOR_PAIR(dc));
+				wrefresh(win);
+					
+			//We have to redraw notes again as well
+			//so we check for notes position and compare
+			//them with current location - 1
+			//if the position contains a note it will
+			//replace that position with a diamond note where
+			//it was located before
+				if(N[i][cells-1] == TRUE)
+				{
+					mvwaddch(win,i,cells-1,ACS_DIAMOND);
+					wrefresh(win);
+				}
+			
+			}
+			
+			
+		}	
+		
+	usleep(milliTime);
+	wrefresh(win);
+	cells++;
+
+	/*If loop has finished we start from beginning*/
+	if(cells == width-1)
+	{
+
+	/*This handles the last bar only, this is to clean up
+	  the | bar like before*/
+		for(int i =1; i < height-1; i++)
+		{
+			wattron(win,COLOR_PAIR(dc));
+			mvwaddch(win,i,cells-1,'.');
+			wattroff(win,COLOR_PAIR(dc));
+
+		}
+		
+		//reset loop position
+		cells = 1;
+	}
+   }
+}
+
 void Generator::getMouse()
 {
 	keypad(win,1);
@@ -200,8 +248,8 @@ void Generator::getMouse()
 			cord_y = event.y;
 			cord_x = event.x;
 			wmouse_trafo(win,&cord_y,&cord_x,FALSE);
-			//ADD DIAMONDS AS NOTES
-			mvwaddch(win,cord_y,cord_x,ACS_DIAMOND);
+			N[cord_y][cord_x] = 1; //update bool map	
+			mvwaddch(win,cord_y,cord_x,ACS_DIAMOND); //Add diamonds as notes
 			//SHOW EQUIVALENT NOTE
 			if(cord_y <= scale)
 			{
@@ -210,6 +258,10 @@ void Generator::getMouse()
 			}
 			wrefresh(win);
 			break;
+
+	case ' ':
+			play_sequence();
+			break;	
     }
 	wrefresh(win);
 	wgetch(win);
