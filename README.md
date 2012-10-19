@@ -34,7 +34,6 @@ For now you have to either put a number only or a string with a number in the en
     //***BASIC SETUP***//
     Generator gen; //Make a generator
 	  gen.set_defaultColor(value); //place the value from the input
-	  gen.set_graphics(); //set color what have you..
 	  gen.setTitle(ttl); //set title (most important!)
 	  gen.generate_shit(); //word
 	
