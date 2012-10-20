@@ -60,9 +60,9 @@ class Generator
 {
 private:
 	WINDOW *win;
-	int stateG; //state of generator;
 	int dc;
 	int c, cord_y, cord_x;
+	int signal;
 	string t;
 	MEVENT event; //For mouse events
 	vector<vector<bool> > N; //for note, to save the position of notes
@@ -84,15 +84,14 @@ public:
 	string checkForNote(int position);
 	void generate_shit();
 	void play_sequence();	
-	int getState();
-	bool sendSignal();
+	void refresh();
 
 	/*Input*/
 	void getMouse(/*mousevent &someting???*/);
 };
 
 Generator::Generator()
-: stateG(0), t(""), dc(0), c(0), cord_y(0),cord_x(0), win(NULL) ,
+: t(""), dc(0), c(0), cord_y(0),cord_x(0),signal(0), win(NULL) ,
 N(height,vector<bool>(width))
 {
     
@@ -120,11 +119,7 @@ Generator::~Generator()
 	wgetch(win);
 	echo();
 	endwin();
-}
-
-    
-    
-    
+}   
 
 void Generator::setWindow()
 {
@@ -142,11 +137,7 @@ void Generator::setWindow()
 
 
 void Generator::drawGrid()
-{
-    
-    
-	
-    
+{ 
 	for(int i = 1; i < height-1; i++)
 	{
 		for(int j = 1; j < width-1; j++)
@@ -157,8 +148,7 @@ void Generator::drawGrid()
 			wrefresh(win); 
             
 		}
-	}
-    
+	}   
 }
 
 string Generator::checkForNote(int position)
@@ -183,7 +173,6 @@ void Generator::play_sequence()
 	while(cells < width-1)
 	{
 
-
 		for(int i = 1; i < height-1; i++)	
 		{
 		/*Draw a sequence line for each bar*/	
@@ -191,11 +180,17 @@ void Generator::play_sequence()
 			mvwaddch(win,i,cells,'|');
 			wattroff(win,COLOR_PAIR(7));
 			wrefresh(win);
-	
+
+		//if there is a note in current position, show its name	
+			if(N[i][cells] == TRUE)
+			{
+				mvwaddstr(win,0,2,checkForNote(0).c_str());
+				mvwaddstr(win,0,2,checkForNote(i).c_str());
+			}
 		/*We have to clean up the bar before so it doesn't
 		  leave behind a white line*/
-			if(cells-1 != 0)
-			{
+			   if(cells-1 != 0)
+			   {
 				wattron(win, COLOR_PAIR(dc));
 				mvwaddch(win,i,cells-1,'.');
 				wattroff(win, COLOR_PAIR(dc));
@@ -213,8 +208,7 @@ void Generator::play_sequence()
 					wrefresh(win);
 				}
 			
-			}
-			
+			   }
 			
 		}	
 		
@@ -242,15 +236,7 @@ void Generator::play_sequence()
    }
 }
 
-int Generator::getState()
-{
-	return stateG;
-}
 
-bool Generator::sendSignal()
-{
-	return TRUE;
-}
 
 void Generator::getMouse()
 {
@@ -265,7 +251,7 @@ void Generator::getMouse()
 			cord_y = event.y;
 			cord_x = event.x;
 			wmouse_trafo(win,&cord_y,&cord_x,FALSE);
-			N[cord_y][cord_x] = 1; //update bool map	
+			N[cord_y][cord_x] = 1; //update bool map
 			mvwaddch(win,cord_y,cord_x,ACS_DIAMOND); //Add diamonds as notes
 			//SHOW EQUIVALENT NOTE
 			if(cord_y <= scale)
@@ -277,8 +263,6 @@ void Generator::getMouse()
 			break;
 	//KEYS
 		case ' ':
-			stateG = 1;
-			sendSignal();
 			play_sequence();
 			break;	
     }
@@ -295,80 +279,13 @@ int convertToInt(char *s)
     
 }
 
+
+
 class MIDI
 {
-	private:
-	int stateM; //state of midi device
-	int sg,ch;
-	vector<int> Note;
-	vector<int> Position;
-	
-	public:
-	MIDI() : stateM(0), sg(0), ch(0) {}
-	~MIDI();
-	void setup();
-	void getNote(int nt);
-	void getPos(int ps);
-	bool sendSignal();
-	int returnState();
-	int setChannelNr(int chanel);
-	//for now
-	void print();
-
+	//class for simple I/O operations
 
 };
-
-MIDI::~MIDI()
-{}
-
-void MIDI::setup()
-{
-
-	/*FILL OUT LIST
-	*	BANK O : CHANNEL 0 - 127	
-	**	BANK 1 : CHANNEL 128 //CURRENT NOTE
-*	**		 CHANNEL 129 //LAST NOTE
-*	*	BANK 2 :
-*	*	BANK 3
-*	*
-	*	ETC...
-	*/
-
-
-}
-
-
-
-void MIDI::getNote(int nt)
-{
-	Note.push_back(nt);
-
-}
-void MIDI:: getPos(int ps)
-{
-
-	Position.push_back(ps);
-
-}
-
-bool MIDI::sendSignal()
-{
-	return TRUE;
-}
-
-int MIDI::returnState()
-{
-	return stateM;
-}
-
-int MIDI::setChannelNr(int chanel)
-{
-	ch = chanel;
-
-}
-
-
-
 
 /*HANDLES SIGNALS FROM BOTH GENERATOR AND MIDI CLASS*/
 /*TURNS THEM INTO MESSAGES FOR MIDI CONNECTOR*/

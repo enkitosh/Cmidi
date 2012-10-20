@@ -18,22 +18,27 @@ int value = convertToInt(&str[str.length()-1]);
 	gen.generate_shit();
 
 //***MIDI SETUP***//
-	MIDI mid;
-	mid.setup();
+	//MIDI mid;
+	//mid.setup();
 	
-	mid.setChannelNr(value);
+	//mid.setChannelNr(value);
 
-//***SIGNAL HANDLING***/
-	Signal sig;
+	//I took out MIDI class as a reiceiving class
+	//I guess he can still be in there but not for performance
+	//Maybe it's good to have so if the user wants to save his
+	//pattern in a midi file he can do so 
+	//The midi class will then take down and register
+	//all information about notes, intervals, velocity etc
+	//But for now he is completely useless
+	//all values or states he could be in belong
+	//to the Generator anyway
+
 
 //***//TESTING	
 	while(1)
 	{
 		gen.getMouse();
 		
-	//LISTEN TO STATES
-		sig.listenGen(gen.sendSignal());
-		sig.listenMid(mid.sendSignal());
 	}
 
 
