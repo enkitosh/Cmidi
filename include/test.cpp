@@ -16,12 +16,24 @@ int value = convertToInt(&str[str.length()-1]);
 	gen.set_defaultColor(value);
 	gen.setTitle(ttl);
 	gen.generate_shit();
+
+//***MIDI SETUP***//
+	MIDI mid;
+	mid.setup();
 	
+	mid.setChannelNr(value);
+
+//***SIGNAL HANDLING***/
+	Signal sig;
 
 //***//TESTING	
 	while(1)
 	{
 		gen.getMouse();
+		
+	//LISTEN TO STATES
+		sig.listenGen(gen.sendSignal());
+		sig.listenMid(mid.sendSignal());
 	}
 
 

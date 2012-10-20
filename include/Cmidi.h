@@ -8,13 +8,15 @@
 #include <curses.h>
 #include <sstream>
 #include <unistd.h>
+#include <map>
+#include <iterator>
 
-using std::cout;
-using std::endl;
-using std::vector;
-using std::string;
+using namespace std;
+
 
 const int scale = 12;
+
+
 
 const string NOTES[scale + 2] =
 {"  ",
@@ -33,7 +35,7 @@ const string NOTES[scale + 2] =
 };
 
 /*Timing and BPM*/
-const int BPM = 120; //Beats per minute
+const int BPM = 200; //Beats per minute
 const int BPS = BPM / 60; //Beats per second
 const int TIME = 1000 / BPS; //calculate time - this is x milliseconds per beat
 const int DELAY = TIME / BPM; //calculate Delay time
@@ -56,13 +58,15 @@ const int start_x =  (C - width) / 2;
 
 class Generator
 {
+private:
 	WINDOW *win;
+	int stateG; //state of generator;
 	int dc;
 	int c, cord_y, cord_x;
 	string t;
 	MEVENT event; //For mouse events
 	vector<vector<bool> > N; //for note, to save the position of notes
-    
+	    
 public:
 	Generator();
 	~Generator();
@@ -80,14 +84,15 @@ public:
 	string checkForNote(int position);
 	void generate_shit();
 	void play_sequence();	
+	int getState();
+	bool sendSignal();
 
 	/*Input*/
 	void getMouse(/*mousevent &someting???*/);
-	void getkeys();
 };
 
 Generator::Generator()
-: t(""), dc(0), c(0), cord_y(0),cord_x(0), win(NULL) ,
+: stateG(0), t(""), dc(0), c(0), cord_y(0),cord_x(0), win(NULL) ,
 N(height,vector<bool>(width))
 {
     
@@ -237,6 +242,16 @@ void Generator::play_sequence()
    }
 }
 
+int Generator::getState()
+{
+	return stateG;
+}
+
+bool Generator::sendSignal()
+{
+	return TRUE;
+}
+
 void Generator::getMouse()
 {
 	keypad(win,1);
@@ -244,7 +259,8 @@ void Generator::getMouse()
 	c = wgetch(win);
     switch(c)
     {
-        case KEY_MOUSE:
+	//MOUSE
+	        case KEY_MOUSE:
 			getmouse(&event);
 			cord_y = event.y;
 			cord_x = event.x;
@@ -259,8 +275,10 @@ void Generator::getMouse()
 			}
 			wrefresh(win);
 			break;
-
-	case ' ':
+	//KEYS
+		case ' ':
+			stateG = 1;
+			sendSignal();
 			play_sequence();
 			break;	
     }
@@ -269,8 +287,6 @@ void Generator::getMouse()
     
 }
 
-void Generator::getkeys()
-{/**/}
 
 int convertToInt(char *s)
 {
@@ -278,5 +294,122 @@ int convertToInt(char *s)
 	return atoi(s);
     
 }
+
+class MIDI
+{
+	private:
+	int stateM; //state of midi device
+	int sg,ch;
+	vector<int> Note;
+	vector<int> Position;
+	
+	public:
+	MIDI() : stateM(0), sg(0), ch(0) {}
+	~MIDI();
+	void setup();
+	void getNote(int nt);
+	void getPos(int ps);
+	bool sendSignal();
+	int returnState();
+	int setChannelNr(int chanel);
+	//for now
+	void print();
+
+
+};
+
+MIDI::~MIDI()
+{}
+
+void MIDI::setup()
+{
+
+	/*FILL OUT LIST
+	*	BANK O : CHANNEL 0 - 127	
+	**	BANK 1 : CHANNEL 128 //CURRENT NOTE
+*	**		 CHANNEL 129 //LAST NOTE
+*	*	BANK 2 :
+*	*	BANK 3
+*	*
+	*	ETC...
+	*/
+
+
+}
+
+
+
+void MIDI::getNote(int nt)
+{
+	Note.push_back(nt);
+
+}
+void MIDI:: getPos(int ps)
+{
+
+	Position.push_back(ps);
+
+}
+
+bool MIDI::sendSignal()
+{
+	return TRUE;
+}
+
+int MIDI::returnState()
+{
+	return stateM;
+}
+
+int MIDI::setChannelNr(int chanel)
+{
+	ch = chanel;
+
+}
+
+
+
+
+/*HANDLES SIGNALS FROM BOTH GENERATOR AND MIDI CLASS*/
+/*TURNS THEM INTO MESSAGES FOR MIDI CONNECTOR*/
+class Signal
+{
+	public:
+	void setup();
+	void connect();
+	
+	/*RETRIVE SIGNAL FROM GENERATOR*/
+	void listenGen(bool gen);
+	void getStateGen(int g);	
+
+
+	/*SIGNAL FROM MIDI*/
+	void listenMid(bool mid);
+	void getStateMid(int m);
+
+
+	/*PROCESSING*/
+	int output();	
+
+};
+
+
+void Signal::setup()
+{}
+void Signal::connect()
+{}
+
+void Signal::listenGen(bool gen)
+{
+
+}
+void Signal::getStateGen(int g)
+{}
+void Signal::listenMid(bool mid)
+{}
+void Signal::getStateMid(int m)
+{}
+
+
 
 #endif
