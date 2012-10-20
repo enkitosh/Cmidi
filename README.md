@@ -50,6 +50,8 @@ such as saving a sequence to midi file.
        gen.getMouse();
 
 
+Ascii-cast of the latest running process:
+    http://ascii.io/a/1460
 
-here is a picture of the running process:
+Picture of the latest running process:
     https://dl.dropbox.com/u/2208202/cmid.png
