@@ -49,7 +49,8 @@ some kind of counter will take care that state is either on or off
 
 The MIDI class only takes care of midi messages going from the generator. It stores channel number, last note, but also he stores
 some ability to handle outside messages, like take in new valus etc...
-    //***MIDI SETUP***//
+    
+    MIDI SETUP
     MIDI mid;
     mid.setup(); //set up some channels (probably reserve the first 127 then or so..)
 
