@@ -1,46 +1,56 @@
-#include "CMidi.h"
+#include <iostream>
+#include <cstdlib>
+#include "Cmidi.h"
 
 
-int main(int argc, char *argv[])
+int main( int argc, char *argv[] )
 {
+   
+    int LOOP = 0; 
+    string str = argv[1];
+    string ttl = argv[2];
+    BPM = convertToInt(argv[4]); 
 
-string str = argv[1];
-string ttl = argv[2];
-
-
-//***COLOR CHECKING***//
-int value = convertToInt(&str[str.length()-1]);
-
-//***BASIC SETUP***//
-	Generator gen;
+     if(convertToInt(argv[6]) < width-1)
+     { 
+	LOOP = convertToInt(argv[6]); 
+     }
+    else
+    {
+	//loop can never be bigger than this
+	LOOP = width-1;
+    }
+    //***COLOR CHECKING***//
+    int value = convertToInt(&str[str.length()-1]);
+    
+    //***BASIC SETUP***//
+    Generator gen;
 	gen.set_defaultColor(value);
+	gen.getLoop(LOOP); //get loop sequence
 	gen.setTitle(ttl);
 	gen.generate_shit();
+    
+    
 
-//***MIDI SETUP***//
-	//MIDI mid;
-	//mid.setup();
-	
-	//mid.setChannelNr(value);
+    
+    // Call function to select port.
+    try {
+        if ( gen.chooseMidiPort() == false );
+    }
+    catch ( RtError &error ) {
+        error.printMessage();
+    }
+    
 
-	//I took out MIDI class as a reiceiving class
-	//I guess he can still be in there but not for performance
-	//Maybe it's good to have so if the user wants to save his
-	//pattern in a midi file he can do so 
-	//The midi class will then take down and register
-	//all information about notes, intervals, velocity etc
-	//But for now he is completely useless
-	//all values or states he could be in belong
-	//to the Generator anyway
-
-
-//***//TESTING	
-	while(1)
-	{
-		gen.getMouse();
-		
-	}
-
-
-return 0;
+    
+    while(1)
+    {
+        
+                gen.getMouse();
+                
+    }	
+    
+    
+    return 0;
 }
+
