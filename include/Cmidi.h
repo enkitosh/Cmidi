@@ -63,10 +63,6 @@ const int start_y = (L - height) / 2;
 const int start_x =  (C - width) / 2;
 
 
-
-vector<unsigned char> midiPort;
-
-
 class Generator
 {
 
@@ -90,7 +86,6 @@ public:
 	void play_sequence();	
 	void getMouse(/*mousevent &someting???*/);
     	void getLoop(int loop_seq);
-	void start_message();
     	bool chooseMidiPort();
 
 
@@ -117,10 +112,16 @@ N(height,vector<bool>(width))
     
 	midiout = new RtMidiOut();
 
+	message.push_back(0);
+	message.push_back(0);
+	message.push_back(0);
+
 	initscr();
 	noecho();
 	curs_set(0);
 	keypad(win,TRUE);
+	cbreak();
+	nodelay(win, TRUE);
     
 	mousemask(ALL_MOUSE_EVENTS,NULL);
 	
@@ -149,15 +150,6 @@ Generator::~Generator()
 
 bool Generator::chooseMidiPort()
 {
-    //std::cout << "\nWould you like to open a virtual output port? [y/N] ";
-    
-    /*std::string keyHit;
-     std::getline( std::cin, keyHit );
-     if ( keyHit == "y" ) {
-     rtmidi->openVirtualPort();
-     return true;
-     }
-     */
     
     std::string portName;
     unsigned int i = 0, nPorts = midiout->getPortCount();
@@ -228,8 +220,7 @@ string Generator::checkForNote(int position)
 void Generator::generate_shit()
 {
 	setWindow();
-	drawGrid();    
-    
+	drawGrid();     
 }
 
 
@@ -238,58 +229,16 @@ void Generator::getLoop(int loop_seq)
 	lp = loop_seq;
 }
 
-void Generator::start_message()
-{
-
-    
-    // Program change: 192, 5
-    message.push_back( 192 );
-    message.push_back( 5 );
-    midiout->sendMessage( &message );
-    
-    usleep( milliTime );
-    
-    message[0] = 0xF1;
-    message[1] = 60;
-    midiout->sendMessage( &message );
-    
-    // Control Change: 176, 7, 100 (volume)
-    message[0] = 176;
-    message[1] = 7;
-    message.push_back( 100 );
-    midiout->sendMessage( &message );
-    
-    
-     usleep( milliTime );
-    
-    play_sequence();
-    
-    // Control Change: 176, 7, 40
-    message[0] = 176;
-    message[1] = 7;
-    message[2] = 40;
-    midiout->sendMessage( &message );
-    
-    usleep( milliTime );
-    
-    // Sysex: 240, 67, 4, 3, 2, 247
-    message[0] = 240;
-    message[1] = 67;
-    message[2] = 4;
-    message.push_back( 3 );
-    message.push_back( 2 );
-    message.push_back( 247 );
-    midiout->sendMessage( &message );
-}
 
 void Generator::play_sequence()
 {
 	static int cells = 1;
+	bool noteIsPlaying = 0;
+
 
 	while(cells <= lp)
 	{
     
-
 		for(int i = 1; i < height-1; i++)
 		{
 		/*Draw a sequence line for each bar*/
@@ -301,25 +250,29 @@ void Generator::play_sequence()
 		//if there is a note in current position, show its name	
 			if(N[i][cells] == TRUE)
 			{
+ 		               noteIsPlaying = 1;
+
+               			 // Note On: 144, 64, 90
+                		message[0] = 144 + (dc-1);
+               			message[1] = (12 - i) + 64;
+                		message[2] = 90;
+               			midiout->sendMessage( &message );
                 
-                // Note On: 144, 64, 90
-                message[0] = 144 + (dc-1);
-                message[1] = (12 - i) + 64;
-                message[2] = 90;
-                midiout->sendMessage( &message );
+                	usleep(convertToMilliseconds(100) );
                 
-                usleep( milliTime );
-                
-                // Note Off: 128, 64, 40
-                message[0] = 128 + (dc-1);
-                message[1] =  (12 - i) + 64;
-                message[2] = 40;
-                midiout->sendMessage( &message );
-                
+                		// Note Off: 128, 64, 40
+                		message[0] = 128 + (dc-1);
+                		message[1] =  (12 - i) + 64;
+               			 message[2] = 40;
+                		midiout->sendMessage( &message );
+
+				
                 
 				mvwaddstr(win,0,2,checkForNote(0).c_str());
 				mvwaddstr(win,0,2,checkForNote(i).c_str());
 			}
+
+			noteIsPlaying = 0;
 		/*We have to clean up the bar before so it doesn't
 		  leave behind a white line*/
 			   if(cells-1 != 0)
@@ -350,6 +303,7 @@ void Generator::play_sequence()
 	//midiout -> sendMessage( &message);
 
 	usleep(milliTime);
+
 	cells++;
 
 
@@ -384,14 +338,17 @@ void Generator::play_sequence()
 	wrefresh(win);
    
    }
+
 }
 
 
 
 void Generator::getMouse()
 {
+	cbreak();
+	nodelay(win,TRUE);
 	keypad(win,1);
-    
+ 
 	c = wgetch(win);
     switch(c)
     {
@@ -406,6 +363,21 @@ void Generator::getMouse()
 			//SHOW EQUIVALENT NOTE
 			if(cord_y <= scale)
 			{
+
+			/*To get real time feedback from the mouse*/
+				message[0] = 144 + (dc-1);
+				message[1] = (12 - cord_y) + 64;
+                		message[2] = 90;
+               			midiout->sendMessage( &message );
+                
+                		usleep(convertToMilliseconds(100) );
+                
+                		// Note Off: 128, 64, 40
+                		message[0] = 128 + (dc-1);
+                		message[1] =  (12 - cord_y) + 64;
+               			 message[2] = 40;
+				midiout -> sendMessage( &message );
+				
 				mvwaddstr(win,0,2,checkForNote(0).c_str());
 				mvwaddstr(win,0,2,checkForNote(cord_y).c_str());
 			}
@@ -413,8 +385,8 @@ void Generator::getMouse()
 			break;
 	//KEYS
 		case ' ':
-            		start_message();
-			break;	
+			play_sequence();
+			break;
     }
 	wrefresh(win);
 	wgetch(win);
