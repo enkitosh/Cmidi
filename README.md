@@ -3,7 +3,12 @@ Cmidi
 
 midi sequencer for command line
 
-**NOTE this code is at very early stage, there are no "midi" implementations in this yet, this is mostly graphics and event input from mouse.
+**NOTE this code is at very early stage.
+
+UPDATE: midi now working, sending response on mouse click etc...
+There are still some improvements to be made.
+Keyboard inputs gets stuck in the loop of playing the sequence leaving you
+no other option then to kill the process with ctrl+c.
 
 These are very basic notes about the test.cpp file in the /include folder.
 
