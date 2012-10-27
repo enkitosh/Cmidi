@@ -14,9 +14,9 @@ These are very basic notes about the test.cpp file in the /include folder.
 
     #include "CMidi.h"
 
-when you compile you have to link it against the curses library so you write an executable like this:
+when you compile you have to link it against the curses library and coreMidi etc...so you write an executable like this:
      
-    g++ -o main main.cpp -lncurses
+    g++ -D__MACOSX_CORE__ -o test test.cpp Cmidi.h -lncurses RtMidi.cpp -framework CoreMIDI -framework CoreAudio -framework CoreFoundation
 
 
 The program takes in couple of options when you load the executable
