@@ -24,18 +24,18 @@ int main( int argc, char *argv[] )
     int value = convertToInt(&str[str.length()-1]);
     
     //***BASIC SETUP***//
-    Generator gen;
-	gen.set_defaultColor(value);
-	gen.getLoop(LOOP); //get loop sequence
-	gen.setTitle(ttl);
-	gen.generate_shit();
+    Cmidi mid;
+	mid.set_defaultColor(value);
+	mid.getLoop(LOOP); //get loop sequence
+	mid.setTitle(ttl); //set title
+	mid.generate_shit(); //do it!
     
     
 
     
     // Call function to select port.
     try {
-        if ( gen.chooseMidiPort() == false );
+        if ( mid.chooseMidiPort() == false );
     }
     catch ( RtError &error ) {
         error.printMessage();
@@ -46,7 +46,7 @@ int main( int argc, char *argv[] )
     while(1)
     {
         
-                gen.getMouse();
+                mid.getInput();
                 
     }	
     

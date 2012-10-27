@@ -63,13 +63,13 @@ const int start_y = (L - height) / 2;
 const int start_x =  (C - width) / 2;
 
 
-class Generator
+class Cmidi
 {
 
 	    
 public:
-	Generator();
-	~Generator();
+	Cmidi();
+	~Cmidi();
     
 	/*Graphic stuff*/
 	void set_defaultColor(int clr) {dc = clr;}
@@ -84,7 +84,7 @@ public:
 	string checkForNote(int position);
 	void generate_shit();
 	void play_sequence();	
-	void getMouse(/*mousevent &someting???*/);
+	void getInput();
     	void getLoop(int loop_seq);
     	bool chooseMidiPort();
 
@@ -95,7 +95,9 @@ private:
 	string t;
 	int dc;
 	int c, cord_y, cord_x;
+	int currentNote;
 	int lp;
+	int mode;
 	MEVENT event; //For mouse events
 	
 	WINDOW *win;
@@ -105,8 +107,9 @@ private:
 
 };
 
-Generator::Generator()
-: t(""), dc(0), c(0), cord_y(0),cord_x(0),lp(0), win(NULL) ,
+Cmidi::Cmidi()
+: t(""), dc(0), c(0), cord_y(0),cord_x(0), currentNote(0),
+  mode(1), lp(0),  win(NULL) ,
 N(height,vector<bool>(width))
 {
     
@@ -137,18 +140,27 @@ N(height,vector<bool>(width))
     
 }
 
-Generator::~Generator()
+Cmidi::~Cmidi()
 {
     wgetch(win);
     wrefresh(win);
     endwin();
-    
-    //cleanup connection to port //class RtMidi
-        delete midiout;
 
+/*If we have to kill the process we send 
+a midi off signal so the reicever is not stuck
+with a frozen signal*/
+    
+	message[0] = 128 + (dc-1);
+	message[1] =  currentNote;
+	message[2] = 40;
+	midiout->sendMessage( &message );
+
+
+//cleanup connection to port //class RtMidi
+        delete midiout;
 }
 
-bool Generator::chooseMidiPort()
+bool Cmidi::chooseMidiPort()
 {
     
     std::string portName;
@@ -158,45 +170,28 @@ bool Generator::chooseMidiPort()
     	wrefresh(win);
         return false;
     }
-    
-    if ( nPorts == 1 ) {
-       /* mvwaddstr(win,height-1,start_x - midiout -> getPortName().length(),midiout ->getPortName().c_str());
-    	wrefresh(win);*/
-	}
-    else {
-        for ( i=0; i<nPorts; i++ ) {
-            portName = midiout->getPortName(i);
-            mvwaddstr(win,height-1,2, portName.c_str());
-            //std::cout << "  Output port #" << i << ": " << portName << '\n';
-        }
-        
-        do {
-            //std::cin >> i;
-        } while ( i >= nPorts );
-    }
-    
+     
+
     midiout->openPort( 0 );
     
     return true;
 }
 
 
-void Generator::setWindow()
+void Cmidi::setWindow()
 {
-    
 	win = newwin(height,width,start_y, start_x);
 	box(win,0,1);
 	wrefresh(win);
     
 	mvwprintw(win,0,start_x - (t.length()/2), t.c_str());
 	mvwprintw(win,0,width - 9, "%i:BPM" , BPM);
-	wrefresh(win);
-	
+	wrefresh(win);	
 }
 
 
 
-void Generator::drawGrid()
+void Cmidi::drawGrid()
 { 
 	for(int i = 1; i < height-1; i++)
 	{
@@ -211,26 +206,26 @@ void Generator::drawGrid()
 	}   
 }
 
-string Generator::checkForNote(int position)
+string Cmidi::checkForNote(int position)
 {
 	if(position <= scale)
 		return NOTES[position];
 }
 
-void Generator::generate_shit()
+void Cmidi::generate_shit()
 {
 	setWindow();
 	drawGrid();     
 }
 
 
-void Generator::getLoop(int loop_seq)
+void Cmidi::getLoop(int loop_seq)
 {
 	lp = loop_seq;
 }
 
 
-void Generator::play_sequence()
+void Cmidi::play_sequence()
 {
 	static int cells = 1;
 	bool noteIsPlaying = 0;
@@ -250,6 +245,7 @@ void Generator::play_sequence()
 		//if there is a note in current position, show its name	
 			if(N[i][cells] == TRUE)
 			{
+			  currentNote = (12 - i) + 64; 
  		               noteIsPlaying = 1;
 
                			 // Note On: 144, 64, 90
@@ -263,16 +259,16 @@ void Generator::play_sequence()
                 		// Note Off: 128, 64, 40
                 		message[0] = 128 + (dc-1);
                 		message[1] =  (12 - i) + 64;
-               			 message[2] = 40;
+               			message[2] = 40;
                 		midiout->sendMessage( &message );
-
 				
-                
+				/*Print note value on the top of our sequencer*/
 				mvwaddstr(win,0,2,checkForNote(0).c_str());
 				mvwaddstr(win,0,2,checkForNote(i).c_str());
 			}
 
 			noteIsPlaying = 0;
+
 		/*We have to clean up the bar before so it doesn't
 		  leave behind a white line*/
 			   if(cells-1 != 0)
@@ -343,7 +339,7 @@ void Generator::play_sequence()
 
 
 
-void Generator::getMouse()
+void Cmidi::getInput()
 {
 	cbreak();
 	nodelay(win,TRUE);
@@ -358,15 +354,19 @@ void Generator::getMouse()
 			cord_y = event.y;
 			cord_x = event.x;
 			wmouse_trafo(win,&cord_y,&cord_x,FALSE);
-			N[cord_y][cord_x] = 1; //update bool map
-			mvwaddch(win,cord_y,cord_x,ACS_DIAMOND); //Add diamonds as notes
-			//SHOW EQUIVALENT NOTE
-			if(cord_y <= scale)
+			
+		//SHOW EQUIVALENT NOTE
+			if((cord_y > 0 && cord_y  <= scale) && (cord_x > 0 && cord_x < width-1))
 			{
 
+			if(mode == 1)
+			{
+				N[cord_y][cord_x] = 1; //update bool map
+				mvwaddch(win,cord_y,cord_x,ACS_DIAMOND); //Add diamonds as notes
+			
 			/*To get real time feedback from the mouse*/
-				message[0] = 144 + (dc-1);
-				message[1] = (12 - cord_y) + 64;
+				message[0] = 144 + (dc-1); //channel (144 is ch 1, 145 ch2 etc...)
+				message[1] = (12 - cord_y) + 64; //note to play
                 		message[2] = 90;
                			midiout->sendMessage( &message );
                 
@@ -380,6 +380,16 @@ void Generator::getMouse()
 				
 				mvwaddstr(win,0,2,checkForNote(0).c_str());
 				mvwaddstr(win,0,2,checkForNote(cord_y).c_str());
+		
+			  }
+
+			else if(mode ==2)
+			{
+				N[cord_y][cord_x] = 0;
+				wattron(win,COLOR_PAIR(dc));	
+				mvwaddch(win,cord_y,cord_x,'.');
+				wattroff(win,COLOR_PAIR(dc));
+			}
 			}
 			wrefresh(win);
 			break;
@@ -387,6 +397,8 @@ void Generator::getMouse()
 		case ' ':
 			play_sequence();
 			break;
+		case 'w': mode = 1; break; //write-mode
+		case 'e': mode = 2; break; //erase-mode
     }
 	wrefresh(win);
 	wgetch(win);
@@ -400,9 +412,6 @@ int convertToInt(char *s)
 	return atoi(s);
     
 }
-
-
-
 
 
 #endif
