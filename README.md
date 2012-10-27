@@ -18,42 +18,31 @@ when you compile you have to link it against the curses library so you write an 
      
     g++ -o main main.cpp -lncurses
 
-otherwise I think there is nothing more (hopefully). I think the ncurses header is included in your computer by default
 
-
-}
-
-The first two parameters take input when you load the excecutable , the first is channel number
+The program takes in couple of options when you load the executable
       
       //so like ./test channel1 Drums
 
       string str = argv[1]; //Channel1
       string ttl = argv[2]; //Drums
 
-
 For now you have to either put a number only or a string with a number in the end like here ^^ for the first argument
-      
 
-There are two main classes, Generator and MIDI. 
-Generator, generates stuff. It draws windows, pattern graphic stuff, but it also holds position of notes and channel info
-for example.
+The first argument is really the important one, it matters because this is the channel your midi messages will
+be sent out on. There are other options which you can include , for example:
+    
+    ./test channel1 Drums BPM= 140 LOOP 4
 
-The midi class is unused at the moment. I think it's purpose will mainly be to get all midi information and include operations
-such as saving a sequence to midi file.
+This will set the tempo to 140 and it will make the sequencer loop only the first 4 bars.
+If nothing is declared tempo is set to it's default speed (120 BPM) and the sequencer will only loop when it has reached
+the end.
 
-    //***BASIC SETUP***//
-    Generator gen; //Make a generator
-	  gen.set_defaultColor(value); //place the value from the input
-	  gen.setTitle(ttl); //set title (most important!)
-	  gen.generate_shit(); //word
-	
+There are couple of other options you can set while the sequencer is running:
 
+    'w' = write mode, this option is set by default
+    'e' = erase mode, if you want to erase notes you press 'e' and select the notes you want to erase
 
-       //***//TESTING	
-    while(1)
-    {
-       gen.getMouse();
-
+Note that after you have erased notes you have to click 'w' to get to write mode again.
 
 Ascii-cast of the latest running process:
     http://ascii.io/a/1460
