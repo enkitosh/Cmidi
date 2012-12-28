@@ -245,20 +245,20 @@ void Cmidi::play_sequence()
 		//if there is a note in current position, show its name	
 			if(N[i][cells] == TRUE)
 			{
-			  currentNote = (12 - i) + 64; 
+			  currentNote = (12 - i) + 60;
  		               noteIsPlaying = 1;
 
-               			 // Note On: 144, 64, 90
+               			 // Note On: 144, 60, 90
                 		message[0] = 144 + (dc-1);
-               			message[1] = (12 - i) + 64;
+               			message[1] = (12 - i) + 60;
                 		message[2] = 90;
                			midiout->sendMessage( &message );
                 
                 	usleep(convertToMilliseconds(100) );
                 
-                		// Note Off: 128, 64, 40
+                		// Note Off: 128, 60, 40
                 		message[0] = 128 + (dc-1);
-                		message[1] =  (12 - i) + 64;
+                		message[1] =  (12 - i) + 60;
                			message[2] = 40;
                 		midiout->sendMessage( &message );
 				
@@ -366,15 +366,15 @@ void Cmidi::getInput()
 			
 			/*To get real time feedback from the mouse*/
 				message[0] = 144 + (dc-1); //channel (144 is ch 1, 145 ch2 etc...)
-				message[1] = (12 - cord_y) + 64; //note to play
+				message[1] = (12 - cord_y) + 60; //note to play
                 		message[2] = 90;
                			midiout->sendMessage( &message );
                 
                 		usleep(convertToMilliseconds(100) );
                 
-                		// Note Off: 128, 64, 40
+                		// Note Off: 128, 60, 40
                 		message[0] = 128 + (dc-1);
-                		message[1] =  (12 - cord_y) + 64;
+                		message[1] =  (12 - cord_y) + 60;
                			 message[2] = 40;
 				midiout -> sendMessage( &message );
 				
